@@ -316,7 +316,7 @@ class Odometer {
     if (this.options.formatFunction) {
       const valueString = this.options.formatFunction(value)
       for (let valueDigit of valueString.split("").reverse()) {
-        if (valueDigit.match(/0-9/)) {
+        if (valueDigit.match(/[0-9]/)) {
           digit = this.renderDigit()
           digit.querySelector(".odometer-value").innerHTML = valueDigit
           this.digits.push(digit)

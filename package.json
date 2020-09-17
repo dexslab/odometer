@@ -1,11 +1,12 @@
 {
   "name": "odometer",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Transition numbers with ease",
   "main": "odometer.js",
   "authors": [
     "Adam Schwartz <adam.flynn.schwartz@gmail.com>",
-    "Zack Bloom <zackbloom@gmail.com>"
+    "Zack Bloom <zackbloom@gmail.com>",
+    "Adrian Cruz <adr.ca@live.com>"
   ],
   "license": "MIT",
   "devDependencies": {
