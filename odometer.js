@@ -1,12 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS104: Avoid inline assignments
- * DS202: Simplify dynamic range loops
- * DS205: Consider reworking code to avoid use of IIFEs
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const VALUE_HTML = '<span class="odometer-value"></span>'
 const RIBBON_HTML =
   '<span class="odometer-ribbon"><span class="odometer-ribbon-inner">' +
@@ -58,52 +49,23 @@ const COUNT_MS_PER_FRAME = 1000 / COUNT_FRAMERATE
 const TRANSITION_END_EVENTS =
   "transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd"
 
-const transitionCheckStyles = document.createElement("div").style
-const TRANSITION_SUPPORT =
-  transitionCheckStyles.transition != null ||
-  transitionCheckStyles.webkitTransition != null ||
-  transitionCheckStyles.mozTransition != null ||
-  transitionCheckStyles.oTransition != null
-
-const requestAnimationFrame =
-  window.requestAnimationFrame ||
-  window.mozRequestAnimationFrame ||
-  window.webkitRequestAnimationFrame ||
-  window.msRequestAnimationFrame
-
-const MutationObserver =
-  window.MutationObserver ||
-  window.WebKitMutationObserver ||
-  window.MozMutationObserver
-
-const createFromHTML = function (html) {
+const createFromHTML = (html) => {
   const el = document.createElement("div")
   el.innerHTML = html
   return el.children[0]
 }
 
-const removeClass = (el, name) =>
-  (el.className = el.className.replace(
-    new RegExp(`(^| )${name.split(" ").join("|")}( |$)`, "gi"),
-    " "
-  ))
+const removeClass = (el, ...names) => el.classList.remove(...names)
 
-const addClass = (el, name) => {
-  removeClass(el, name)
-  return (el.className += ` ${name}`)
-}
+const addClass = (el, ...name) => el.classList.add(...name)
 
 const trigger = (el, name) => {
-  // Custom DOM events are not supported in IE8
-  if (document.createEvent != null) {
-    const evt = document.createEvent("HTMLEvents")
-    evt.initEvent(name, true, true)
-    return el.dispatchEvent(evt)
-  }
+  return el.dispatchEvent(
+    new CustomEvent(name, { bubbles: true, cancelable: true })
+  )
 }
 
-const now = () =>
-  "performance" in window ? window.performance.now() : Date.now()
+const now = () => window.performance.now()
 
 const round = (val, precision = 0) => {
   if (!precision) {
@@ -131,7 +93,7 @@ class Odometer {
   constructor(options) {
     this.options = options
     this.el = this.options.el
-    if (this.el.odometer != null) {
+    if (this.el.odometer) {
       return this.el.odometer
     }
 
@@ -188,6 +150,20 @@ class Odometer {
     }
   }
 
+  static init() {
+    const elements = document.querySelectorAll(
+      Odometer.options.selector || ".odometer"
+    )
+
+    return elements.map(
+      (el) =>
+        (el.odometer = new Odometer({
+          el,
+          value: el.innerText != null ? el.innerText : el.textContent,
+        }))
+    )
+  }
+
   renderInside() {
     this.inside = document.createElement("div")
     this.inside.className = "odometer-inside"
@@ -198,10 +174,6 @@ class Odometer {
   watchForMutations() {
     // Safari doesn't allow us to wrap .innerHTML, so we listen for it
     // changing.
-    if (MutationObserver == null) {
-      return
-    }
-
     try {
       if (this.observer == null) {
         this.observer = new MutationObserver((mutations) => {
@@ -274,8 +246,7 @@ class Odometer {
   }
 
   resetFormat() {
-    let format =
-      this.options.format != null ? this.options.format : DIGIT_FORMAT
+    let format = this.options.format ? this.options.format : DIGIT_FORMAT
     if (!format) {
       format = "d"
     }
@@ -300,7 +271,7 @@ class Odometer {
 
     let { theme } = this.options
 
-    const classes = this.el.className.split(" ")
+    const classes = this.el.classList
     const newClasses = []
     for (let cls of classes) {
       if (cls.length) {
@@ -320,10 +291,6 @@ class Odometer {
     }
 
     newClasses.push("odometer")
-
-    if (!TRANSITION_SUPPORT) {
-      newClasses.push("odometer-no-transitions")
-    }
 
     if (theme) {
       newClasses.push(`odometer-theme-${theme}`)
@@ -371,16 +338,18 @@ class Odometer {
   }
 
   update(newValue) {
-    let diff
+    let diff = newValue - this.value
     newValue = this.cleanValue(newValue)
 
-    if (!(diff = newValue - this.value)) {
+    if (!diff) {
       return
     }
 
     removeClass(
       this.el,
-      "odometer-animating-up odometer-animating-down odometer-animating"
+      "odometer-animating-up",
+      "odometer-animating-down",
+      "odometer-animating"
     )
     if (diff > 0) {
       addClass(this.el, "odometer-animating-up")
@@ -416,11 +385,11 @@ class Odometer {
     }
   }
 
-  addSpacer(chr, before, extraClasses) {
+  addSpacer(chr, before, ...extraClasses) {
     const spacer = createFromHTML(FORMAT_MARK_HTML)
     spacer.innerHTML = chr
-    if (extraClasses) {
-      addClass(spacer, extraClasses)
+    if (extraClasses && extraClasses.length) {
+      addClass(spacer, ...extraClasses)
     }
     return this.insertDigit(spacer, before)
   }
@@ -472,7 +441,7 @@ class Odometer {
   }
 
   animate(newValue) {
-    if (!TRANSITION_SUPPORT || this.options.animation === "count") {
+    if (this.options.animation === "count") {
       return this.animateCount(newValue)
     } else {
       return this.animateSlide(newValue)
@@ -508,11 +477,7 @@ class Odometer {
         this.render(Math.round(cur))
       }
 
-      if (requestAnimationFrame != null) {
-        return requestAnimationFrame(tick)
-      } else {
-        return setTimeout(tick, COUNT_MS_PER_FRAME)
-      }
+      return requestAnimationFrame(tick)
     })()
   }
 
@@ -662,7 +627,7 @@ class Odometer {
     }
 
     const mark = this.inside.querySelector(".odometer-radix-mark")
-    if (mark != null) {
+    if (mark) {
       mark.parent.removeChild(mark)
     }
 
@@ -676,42 +641,9 @@ class Odometer {
   }
 }
 
-Odometer.options = window.odometerOptions != null ? window.odometerOptions : {}
+Odometer.options = window.odometerOptions ? window.odometerOptions : {}
 
-setTimeout(function () {
-  // We do this in a seperate pass to allow people to set
-  // window.odometerOptions after bringing the file in.
-  if (window.odometerOptions) {
-    return (() => {
-      const result = []
-      for (let k in window.odometerOptions) {
-        const v = window.odometerOptions[k]
-        result.push(
-          Odometer.options[k] != null
-            ? Odometer.options[k]
-            : (Odometer.options[k] = v)
-        )
-      }
-      return result
-    })()
-  }
-}, 0)
-
-Odometer.init = function () {
-  const elements = document.querySelectorAll(
-    Odometer.options.selector || ".odometer"
-  )
-
-  return elements.map(
-    (el) =>
-      (el.odometer = new Odometer({
-        el,
-        value: el.innerText != null ? el.innerText : el.textContent,
-      }))
-  )
-}
-
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   if (Odometer.options.auto !== false) {
     return Odometer.init()
   }
