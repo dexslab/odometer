@@ -1,11 +1,16 @@
 {
   "name": "odometer",
   "main": "odometer.js",
-  "version": "0.4.8",
-  "homepage": "http://github.hubspot.com/odometer/docs/welcome",
+  "version": "0.5.0",
+  "license": "MIT",
+  "homepage": "https://github.com/adrian2x/odometer",
   "authors": [
     "Zack Bloom <zbloom@hubspot.com>",
-    "Adam Schwartz <aschwartz@hubspot.com>"
+    "Adam Schwartz <aschwartz@hubspot.com>",
+    "Mikael Møller <mikaelhm@apple.com>",
+    "Adrian Cruz <adr.ca@live.com>",
+    "Andrii Korzh"
+
   ],
   "description": "Transition numbers with ease",
   "keywords": [
@@ -20,7 +25,6 @@
     "javascript",
     "client-side"
   ],
-  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
