@@ -352,10 +352,10 @@ class Odometer {
       }
 
       // Pad with zeroes if under length
-      let minIntegerLength = this.options.minIntegerLength || MIN_INTEGER_LEN
-      let range = __range__(i - fractionalCount, minIntegerLength)
-      for (let i of range) {
-        this.addDigit(0, true)
+      let minIntegerLength = this.options.minIntegerLength || MIN_INTEGER_LEN;
+      let renderedDigits = i - fractionalCount;
+      while (renderedDigits++ < minIntegerLength) {
+        this.addDigit(0, true);
       }
 
       if (value < 0) {
@@ -611,7 +611,7 @@ class Odometer {
 
         boosted++
       } else {
-        frames = __range__(start, end, true)
+        frames = __range__(start, end, true);
       }
 
       // We only care about the last digit
@@ -698,10 +698,11 @@ if (typeof define === 'function' && define.amd) {
 
 function __range__(left, right, inclusive) {
   let range = []
-  let ascending = left < right
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i)
+  let step = left < right ? 1 : -1;
+  let end = !inclusive ? right : right + step;
+  while (left !== end) {
+    range.push(left);
+    left += step;
   }
   return range
 }
