@@ -1,12 +1,15 @@
+/**
+ * ES6 code for modern browsers!
+ */
 const VALUE_HTML = '<span class="odometer-value"></span>'
 const RIBBON_HTML =
   '<span class="odometer-ribbon"><span class="odometer-ribbon-inner">' +
   VALUE_HTML +
-  "</span></span>"
+  '</span></span>'
 const DIGIT_HTML =
   '<span class="odometer-digit"><span class="odometer-digit-spacer">8</span><span class="odometer-digit-inner">' +
   RIBBON_HTML +
-  "</span></span>"
+  '</span></span>'
 const FORMAT_MARK_HTML = '<span class="odometer-formatting-mark"></span>'
 
 // The bit within the parenthesis will be repeated, so (,ddd) becomes 123,456,789....
@@ -20,9 +23,12 @@ const FORMAT_MARK_HTML = '<span class="odometer-formatting-mark"></span>'
 // strings are assumed to already be in the locale's format.
 //
 // This is just the default, it can also be set as options.format.
-const DIGIT_FORMAT = "(,ddd).dd"
+const DIGIT_FORMAT = '(,ddd).dd'
 
-const FORMAT_PARSER = /^\(?([^)]*)\)?(?:(.)(d+))?$/
+// Minimum length (number of digits) of the integer-part of the number
+const MIN_INTEGER_LEN = 0
+
+const FORMAT_PARSER = /^\(?([^)]*)\)?(?:(.)(D*)(d*))?$/
 
 // What is our target framerate?
 const FRAMERATE = 30
@@ -47,17 +53,22 @@ const MS_PER_FRAME = 1000 / FRAMERATE
 const COUNT_MS_PER_FRAME = 1000 / COUNT_FRAMERATE
 
 const TRANSITION_END_EVENTS =
-  "transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd"
+  'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd'
 
 const createFromHTML = (html) => {
-  const el = document.createElement("div")
+  const el = document.createElement('div')
   el.innerHTML = html
   return el.children[0]
 }
 
-const removeClass = (el, ...names) => el.classList.remove(...names)
+const removeClass = (el, ...classes) => {
+  return el.classList.remove(...classes)
+}
 
-const addClass = (el, ...name) => el.classList.add(...name)
+const addClass = (el, ...classes) => {
+  removeClass(el, ...classes)
+  return el.classList.add(...classes)
+}
 
 const trigger = (el, name) => {
   return el.dispatchEvent(
@@ -75,7 +86,7 @@ const round = (val, precision = 0) => {
   val *= Math.pow(10, precision)
   val += 0.5
   val = Math.floor(val)
-  return (val /= Math.pow(10, precision))
+  return val / Math.pow(10, precision)
 }
 
 const truncate = (val) => {
@@ -86,8 +97,6 @@ const truncate = (val) => {
     return Math.floor(val)
   }
 }
-
-const fractionalPart = (val) => val - round(val)
 
 class Odometer {
   constructor(options) {
@@ -115,19 +124,19 @@ class Odometer {
     this.resetFormat()
 
     this.value = this.cleanValue(
-      this.options.value != null ? this.options.value : ""
+      this.options.value != null ? this.options.value : ''
     )
 
     this.renderInside()
     this.render()
 
     try {
-      for (let property of ["innerHTML", "innerText", "textContent"]) {
+      for (let property of ['innerHTML', 'innerText', 'textContent']) {
         if (this.el[property] != null) {
           ;((property) => {
             return Object.defineProperty(this.el, property, {
               get: () => {
-                if (property === "innerHTML") {
+                if (property === 'innerHTML') {
                   return this.inside.outerHTML
                 } else {
                   // It's just a single HTML element, so innerText is the
@@ -152,7 +161,7 @@ class Odometer {
 
   static init() {
     const elements = document.querySelectorAll(
-      Odometer.options.selector || ".odometer"
+      Odometer.options.selector || '.odometer'
     )
 
     return elements.map(
@@ -165,9 +174,9 @@ class Odometer {
   }
 
   renderInside() {
-    this.inside = document.createElement("div")
-    this.inside.className = "odometer-inside"
-    this.el.innerHTML = ""
+    this.inside = document.createElement('div')
+    this.inside.className = 'odometer-inside'
+    this.el.innerHTML = ''
     return this.el.appendChild(this.inside)
   }
 
@@ -175,7 +184,7 @@ class Odometer {
     // Safari doesn't allow us to wrap .innerHTML, so we listen for it
     // changing.
     try {
-      if (this.observer == null) {
+      if (!this.observer) {
         this.observer = new MutationObserver((mutations) => {
           const newVal = this.el.innerText
 
@@ -201,15 +210,12 @@ class Odometer {
   }
 
   cleanValue(val) {
-    if (typeof val === "string") {
+    if (typeof val === 'string') {
       // We need to normalize the format so we can properly turn it into
       // a float.
-      val = val.replace(
-        this.format.radix != null ? this.format.radix : ".",
-        "<radix>"
-      )
-      val = val.replace(/[.,]/g, "")
-      val = val.replace("<radix>", ".")
+      val = val.replace(this.format.radix || '.', '<radix>')
+      val = val.replace(/[.,]/g, '')
+      val = val.replace('<radix>', '.')
       val = parseFloat(val, 10) || 0
     }
 
@@ -225,7 +231,7 @@ class Odometer {
     // The event will be triggered once for each ribbon, we only
     // want one render though
     let renderEnqueued = false
-    return TRANSITION_END_EVENTS.split(" ").map((event) =>
+    return TRANSITION_END_EVENTS.split(' ').map((event) =>
       this.el.addEventListener(event, () => {
         if (renderEnqueued) {
           return true
@@ -237,7 +243,7 @@ class Odometer {
           this.render()
           renderEnqueued = false
 
-          return trigger(this.el, "odometerdone")
+          return trigger(this.el, 'odometerdone')
         }, 0)
 
         return true
@@ -246,34 +252,35 @@ class Odometer {
   }
 
   resetFormat() {
-    let format = this.options.format ? this.options.format : DIGIT_FORMAT
+    let format = this.options.format || DIGIT_FORMAT
     if (!format) {
-      format = "d"
+      format = 'd'
     }
 
     const parsed = FORMAT_PARSER.exec(format)
     if (!parsed) {
-      throw new Error("Odometer: Unparsable digit format")
+      throw new Error('Odometer: Unparsable digit format')
     }
 
-    const [repeating, radix, fractional] = parsed.slice(1, 4)
+    const [repeating, radix, fractional1, fractional2] = parsed.slice(1, 5)
 
-    const precision = fractional ? fractional.length : 0
+    let fractional = fractional1 ? fractional1.length : 0
 
-    return (this.format = { repeating, radix, precision })
+    const precision = fractional + (fractional2 ? fractional2.length : 0)
+
+    return (this.format = { repeating, radix, precision, fractional })
   }
 
   render(value = this.value) {
     this.stopWatchingMutations()
     this.resetFormat()
 
-    this.inside.innerHTML = ""
+    this.inside.innerHTML = ''
 
     let { theme } = this.options
 
-    const classes = this.el.classList
     const newClasses = []
-    for (let cls of classes) {
+    for (let cls of this.el.classList) {
       if (cls.length) {
         var match
 
@@ -290,17 +297,17 @@ class Odometer {
       }
     }
 
-    newClasses.push("odometer")
+    newClasses.push('odometer')
 
     if (theme) {
       newClasses.push(`odometer-theme-${theme}`)
     } else {
       // This class matches all themes, so it should do what you'd expect if only one
       // theme css file is brought into the page.
-      newClasses.push("odometer-auto-theme")
+      newClasses.push('odometer-auto-theme')
     }
 
-    this.el.className = newClasses.join(" ")
+    this.el.className = newClasses.join(' ')
 
     this.ribbons = {}
 
@@ -315,10 +322,10 @@ class Odometer {
 
     if (this.options.formatFunction) {
       const valueString = this.options.formatFunction(value)
-      for (let valueDigit of valueString.split("").reverse()) {
+      for (let valueDigit of valueString.split('').reverse()) {
         if (valueDigit.match(/[0-9]/)) {
           digit = this.renderDigit()
-          digit.querySelector(".odometer-value").innerHTML = valueDigit
+          digit.querySelector('.odometer-value').innerHTML = valueDigit
           this.digits.push(digit)
           this.insertDigit(digit)
         } else {
@@ -326,13 +333,33 @@ class Odometer {
         }
       }
     } else {
-      let wholePart = !this.format.precision || !fractionalPart(value) || false
-      for (digit of value.toString().split("").reverse()) {
-        if (digit === ".") {
-          wholePart = true
+      let v = Math.abs(value)
+      let fractionalCount = Math.max(
+        this.format.fractional,
+        this.getFractionalDigitCount(v)
+      )
+      if (fractionalCount) {
+        v = Math.round(v * Math.pow(10, fractionalCount))
+      }
+      let i = 0
+      while (v > 0) {
+        this.addDigit((v % 10).toString(), i >= fractionalCount)
+        v = Math.floor(v / 10)
+        i++
+        if (i === fractionalCount) {
+          this.addDigit('.', true)
         }
+      }
 
-        this.addDigit(digit, wholePart)
+      // Pad with zeroes if under length
+      let minIntegerLength = this.options.minIntegerLength || MIN_INTEGER_LEN
+      let range = __range__(i - fractionalCount, minIntegerLength)
+      for (let i of range) {
+        this.addDigit(0, true)
+      }
+
+      if (value < 0) {
+        this.addDigit('-', true)
       }
     }
   }
@@ -347,14 +374,14 @@ class Odometer {
 
     removeClass(
       this.el,
-      "odometer-animating-up",
-      "odometer-animating-down",
-      "odometer-animating"
+      'odometer-animating-up',
+      'odometer-animating-down',
+      'odometer-animating'
     )
     if (diff > 0) {
-      addClass(this.el, "odometer-animating-up")
+      addClass(this.el, 'odometer-animating-up')
     } else {
-      addClass(this.el, "odometer-animating-down")
+      addClass(this.el, 'odometer-animating-down')
     }
 
     this.stopWatchingMutations()
@@ -365,7 +392,7 @@ class Odometer {
       // Force a repaint
       this.el.offsetHeight
 
-      return addClass(this.el, "odometer-animating")
+      return addClass(this.el, 'odometer-animating')
     }, 0)
 
     return (this.value = newValue)
@@ -388,22 +415,22 @@ class Odometer {
   addSpacer(chr, before, ...extraClasses) {
     const spacer = createFromHTML(FORMAT_MARK_HTML)
     spacer.innerHTML = chr
-    if (extraClasses && extraClasses.length) {
+    if (extraClasses) {
       addClass(spacer, ...extraClasses)
     }
     return this.insertDigit(spacer, before)
   }
 
   addDigit(value, repeating = true) {
-    if (value === "-") {
-      return this.addSpacer(value, null, "odometer-negation-mark")
+    if (value === '-') {
+      return this.addSpacer(value, null, 'odometer-negation-mark')
     }
 
-    if (value === ".") {
+    if (value === '.') {
       return this.addSpacer(
-        this.format.radix != null ? this.format.radix : ".",
+        this.format.radix || '.',
         null,
-        "odometer-radix-mark"
+        'odometer-radix-mark'
       )
     }
 
@@ -412,7 +439,7 @@ class Odometer {
       while (true) {
         if (!this.format.repeating.length) {
           if (resetted) {
-            throw new Error("Bad odometer format without digits")
+            throw new Error('Bad odometer format without digits')
           }
 
           this.resetFormat()
@@ -425,7 +452,7 @@ class Odometer {
           this.format.repeating.length - 1
         )
 
-        if (chr === "d") {
+        if (chr === 'd') {
           break
         }
 
@@ -434,14 +461,14 @@ class Odometer {
     }
 
     const digit = this.renderDigit()
-    digit.querySelector(".odometer-value").innerHTML = value
+    digit.querySelector('.odometer-value').innerHTML = value
     this.digits.push(digit)
 
     return this.insertDigit(digit)
   }
 
   animate(newValue) {
-    if (this.options.animation === "count") {
+    if (this.options.animation === 'count') {
       return this.animateCount(newValue)
     } else {
       return this.animateSlide(newValue)
@@ -449,20 +476,21 @@ class Odometer {
   }
 
   animateCount(newValue) {
-    let diff, last, tick
-    if (!(diff = +newValue - this.value)) {
+    let diff = +newValue - this.value,
+      last = now(),
+      tick
+    if (!diff) {
       return
     }
 
-    const start = (last = now())
+    const start = last
 
     let cur = this.value
     return (tick = () => {
       if (now() - start > this.options.duration) {
         this.value = newValue
         this.render()
-        trigger(this.el, "odometerdone")
-        return
+        return trigger(this.el, 'odometerdone')
       }
 
       const delta = now() - last
@@ -503,7 +531,7 @@ class Odometer {
 
       const parts = parser.exec(values[i])
 
-      if (parts == null) {
+      if (!parts) {
         values[i] = 0
       } else {
         values[i] = parts[1].length
@@ -516,7 +544,7 @@ class Odometer {
   resetDigits() {
     this.digits = []
     this.ribbons = []
-    this.inside.innerHTML = ""
+    this.inside.innerHTML = ''
     return this.resetFormat()
   }
 
@@ -525,11 +553,14 @@ class Odometer {
     let asc, end1, k
     let oldValue = this.value
 
-    const fractionalCount = this.getFractionalDigitCount(oldValue, newValue)
+    const fractionalCount = Math.max(
+      this.format.fractional,
+      this.getFractionalDigitCount(oldValue, newValue)
+    )
 
     if (fractionalCount) {
-      newValue = newValue * Math.pow(10, fractionalCount)
-      oldValue = oldValue * Math.pow(10, fractionalCount)
+      newValue = Math.round(newValue * Math.pow(10, fractionalCount))
+      oldValue = Math.round(oldValue * Math.pow(10, fractionalCount))
     }
 
     if (!(diff = newValue - oldValue)) {
@@ -538,7 +569,12 @@ class Odometer {
 
     this.bindTransitionEnd()
 
-    const digitCount = this.getDigitCount(oldValue, newValue)
+    // check if we need to pad with zeroes
+    let minIntegerLength = this.options.minIntegerLength || MIN_INTEGER_LEN
+    const digitCount = Math.max(
+      this.getDigitCount(oldValue, newValue),
+      minIntegerLength + fractionalCount
+    )
 
     const digits = []
     let boosted = 0
@@ -575,7 +611,7 @@ class Odometer {
 
         boosted++
       } else {
-        frames = rangeInclusive(start, end, true)
+        frames = __range__(start, end, true)
       }
 
       // We only care about the last digit
@@ -593,13 +629,13 @@ class Odometer {
     for (i = 0; i < iterable.length; i++) {
       frames = iterable[i]
       if (!this.digits[i]) {
-        this.addDigit(" ", i >= fractionalCount)
+        this.addDigit(' ', i >= fractionalCount)
       }
 
       if (this.ribbons[i] == null) {
-        this.ribbons[i] = this.digits[i].querySelector(".odometer-ribbon-inner")
+        this.ribbons[i] = this.digits[i].querySelector('.odometer-ribbon-inner')
       }
-      this.ribbons[i].innerHTML = ""
+      this.ribbons[i].innerHTML = ''
 
       if (diff < 0) {
         frames = frames.reverse()
@@ -607,26 +643,26 @@ class Odometer {
 
       for (let j = 0; j < frames.length; j++) {
         frame = frames[j]
-        const numEl = document.createElement("div")
-        numEl.className = "odometer-value"
+        const numEl = document.createElement('div')
+        numEl.className = 'odometer-value'
         numEl.innerHTML = frame
 
         this.ribbons[i].appendChild(numEl)
 
         if (j === frames.length - 1) {
-          addClass(numEl, "odometer-last-value")
+          addClass(numEl, 'odometer-last-value')
         }
         if (j === 0) {
-          addClass(numEl, "odometer-first-value")
+          addClass(numEl, 'odometer-first-value')
         }
       }
     }
 
     if (start < 0) {
-      this.addDigit("-")
+      this.addDigit('-')
     }
 
-    const mark = this.inside.querySelector(".odometer-radix-mark")
+    const mark = this.inside.querySelector('.odometer-radix-mark')
     if (mark) {
       mark.parent.removeChild(mark)
     }
@@ -635,24 +671,24 @@ class Odometer {
       return this.addSpacer(
         this.format.radix,
         this.digits[fractionalCount - 1],
-        "odometer-radix-mark"
+        'odometer-radix-mark'
       )
     }
   }
 }
 
-Odometer.options = window.odometerOptions ? window.odometerOptions : {}
+Odometer.options = window.odometerOptions || {}
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   if (Odometer.options.auto !== false) {
     return Odometer.init()
   }
 })
 
-if (typeof define === "function" && define.amd) {
+if (typeof define === 'function' && define.amd) {
   // AMD. Register as an anonymous module.
   define([], () => Odometer)
-} else if (typeof exports !== "undefined" && exports !== null) {
+} else if (typeof exports !== 'undefined' && exports != null) {
   // CommonJS
   module.exports = Odometer
 } else {
@@ -660,18 +696,12 @@ if (typeof define === "function" && define.amd) {
   window.Odometer = Odometer
 }
 
-function rangeInclusive(start, stop = undefined, stepSize = 1) {
-  if (stop === undefined) {
-    stop = start
-    start = 1
+function __range__(left, right, inclusive) {
+  let range = []
+  let ascending = left < right
+  let end = !inclusive ? right : ascending ? right + 1 : right - 1
+  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
+    range.push(i)
   }
-
-  const steps = (stop - start) / stepSize
-
-  const set = []
-  for (let step = 0; step <= steps; step++) {
-    set.push(start + step * stepSize)
-  }
-
-  return set
+  return range
 }
