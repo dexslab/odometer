@@ -3,15 +3,19 @@
   "version": "0.5.0",
   "description": "Transition numbers with ease",
   "main": "odometer.js",
+  "source": true,
   "authors": [
     "Zack Bloom <zbloom@hubspot.com>",
     "Adam Schwartz <aschwartz@hubspot.com>",
     "Mikael Møller <mikaelhm@apple.com>",
     "Adrian Cruz <adr.ca@live.com>",
     "Andrii Korzh"
-
   ],
   "license": "MIT",
+  "peerDependencies": {
+    "react": "^16.13.1"
+  },
   "devDependencies": {
+    "prop-types": "^15.7.2"
   }
 }
