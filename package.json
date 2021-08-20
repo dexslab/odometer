@@ -1,9 +1,10 @@
 {
   "name": "odometer",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Transition numbers with ease",
   "main": "odometer.js",
   "source": true,
+  "types": "odometer.d.ts",
   "authors": [
     "Zack Bloom <zbloom@hubspot.com>",
     "Adam Schwartz <aschwartz@hubspot.com>",
