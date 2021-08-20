@@ -1,8 +1,32 @@
 <!DOCTYPE html>
-<head>
-    <script>
-        import Odometer from "../odometer/odometer"
-        
-        
-    </script>
-</head>
+<link rel="stylesheet" href="../themes/odometer-theme-car.css" />
+<style>
+.odometer {
+  font-size: 40px;
+}
+</style>
+<script>
+
+</script>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="../odometer.js"></script>
+<div class="odometer">10</div>
+
+<script>
+    let el = document.querySelector('.odometer');
+    let od = new Odometer({
+    el: el,
+  value: 999,
+  minIntegerLength: 6,
+  // Any option (other than auto and selector) can be passed in here
+  format: '(,ddd).D',
+  theme: 'car'
+});
+
+    let count = 1000;
+  setInterval(function(){
+    od.update(count);
+    count ++
+  }, 3000);
+</script>

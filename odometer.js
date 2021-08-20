@@ -163,7 +163,6 @@ class Odometer {
     const elements = document.querySelectorAll(
       Odometer.options.selector || '.odometer'
     )
-    console.log(`type of elements ${typeof elements}`);
     return Array.from(elements).map(
       (el) =>
         (el.odometer = new Odometer({
