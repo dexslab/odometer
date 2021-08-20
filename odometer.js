@@ -159,19 +159,19 @@ class Odometer {
     }
   }
 
-  // static init() {
-  //   const elements = document.querySelectorAll(
-  //     Odometer.options.selector || '.odometer'
-  //   )
+  static init() {
+    const elements = document.querySelectorAll(
+      Odometer.options.selector || '.odometer'
+    )
 
-  //   return elements.map(
-  //     (el) =>
-  //       (el.odometer = new Odometer({
-  //         el,
-  //         value: el.innerText != null ? el.innerText : el.textContent,
-  //       }))
-  //   )
-  // }
+    return elements.map(
+      (el) =>
+        (el.odometer = new Odometer({
+          el,
+          value: el.innerText != null ? el.innerText : el.textContent,
+        }))
+    )
+  }
 
   renderInside() {
     this.inside = document.createElement('div')
