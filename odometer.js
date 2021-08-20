@@ -164,7 +164,7 @@ class Odometer {
       Odometer.options.selector || '.odometer'
     )
     console.log(`type of elements ${typeof elements}`);
-    return elements.forEach(
+    return Array.from(elements).map(
       (el) =>
         (el.odometer = new Odometer({
           el,
