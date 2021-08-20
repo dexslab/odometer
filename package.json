@@ -16,6 +16,7 @@
     "react": "^16.13.1"
   },
   "devDependencies": {
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "typescript": "^4.3.5"
   }
 }
